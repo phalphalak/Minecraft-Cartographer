@@ -1,0 +1,11 @@
+# vi swap files
+*.swp
+
+# emacs
+.\#*
+\#*
+
+# misc 
+.lein-deps-sum
+lib
+
