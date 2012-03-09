@@ -22,21 +22,22 @@
           (let [tag (resolve-tag stream)]
             (if (= tag "TAG_End")
               acc
-              (recur (conj acc tag)))))]
+              (recur (conj acc tag)))))] ;TAG_COMPOUND
     9 [(if named? (.readUTF stream) nil)
-       (let [type (.readByte stream)] (take (.readInt stream) (repeatedly #(resolve-tag stream :named? false :type type))))]
-    8 [(if named? (.readUTF stream) nil) (.readUTF stream)]
+       (let [list-type (.readByte stream)]
+         (doall (take (.readInt stream) (repeatedly #(resolve-tag stream :named? false :type list-type)))))] ;TAG_List
+    8 [(if named? (.readUTF stream) nil) (.readUTF stream)] ;TAG_String
     7 [(if named? (.readUTF stream) nil)
        (let [bytes (byte-array (.readInt stream))]
          (.readFully stream bytes)
-         bytes)]
-    6 [(if named? (.readUTF stream) nil) (.readDouble stream)]
-    5 [(if named? (.readUTF stream) nil) (.readFloat stream)]
-    4 [(if named? (.readUTF stream) nil) (.readLong stream)]
-    3 [(if named? (.readUTF stream) nil) (.readInt stream)]
-    2 [(if named? (.readUTF stream) nil) (.readShort stream)]
-    1 [(if named? (.readUTF stream) nil) (.readByte stream)]    
-    0 "TAG_End"
+         bytes)] ;TAG_Byte_Array
+    6 [(if named? (.readUTF stream) nil) (.readDouble stream)] ;TAG_Double
+    5 [(if named? (.readUTF stream) nil) (.readFloat stream)] ;TAG_Float
+    4 [(if named? (.readUTF stream) nil) (.readLong stream)] ;TAG_Long
+    3 [(if named? (.readUTF stream) nil) (.readInt stream)] ;TAG_Int
+    2 [(if named? (.readUTF stream) nil) (.readShort stream)] ;TAG_Short
+    1 [(if named? (.readUTF stream) nil) (.readByte stream)] ;TAG_Byte
+    0 "TAG_End" ;TAG_END
     ))
 
 (defn decompress-chunk-data [bytes compression]
@@ -74,8 +75,8 @@
                 chunk_sector_counts
                 chunk_timestamps
                 coordinates)
-
-        ] (remove #(= 0 (% :sector_count)) chunks)
+        ]
+    (remove #(= 0 (% :sector_count)) chunks)
     ))
 
 
