@@ -1,21 +1,23 @@
 (ns cartographer.reader)
 
-(import '(java.io File))
+(set! *warn-on-reflection* true)
+
+(import '(java.io File DataInputStream))
 (import '(java.nio.file Files))
 
 (defn bytes-to-int [bytes]
   (let [b (if (> 4 (count bytes)) (concat (repeat (- 4 ( count bytes)) 0) bytes) bytes)]
     (.getInt (java.nio.ByteBuffer/wrap (into-array Byte/TYPE b)))))
 
-(defn region_files [save_folder]
+(defn region_files [#^String save_folder]
   (map
    #(merge {:file %}
            (apply hash-map (interleave
                  [:x :y]
-                 (map (fn [x] (Integer/parseInt x)) (drop 1 (re-find #"r.(-?\d+).(-?\d+).mcr" (.getName %)))))))
+                 (map (fn [x] (Integer/parseInt x)) (drop 1 (re-find #"r.(-?\d+).(-?\d+).mcr" (.getName #^File %)))))))
    (seq (.listFiles (File. (File. save_folder) "region")))))
 
-(defn resolve-tag [stream & {:keys [named? type] :or {named? true}}]
+(defn resolve-tag [#^DataInputStream stream & {:keys [named? type] :or {named? true}}]
   (case (or type (.read stream))
     10 [(if named? (.readUTF stream) nil)
            (loop [acc []]
@@ -43,7 +45,7 @@
 (defn decompress-chunk-data [bytes compression]
   {:pre [(some #{1 2} [compression])]}
   ( let [byte_input_stream (java.io.ByteArrayInputStream. (into-array Byte/TYPE bytes))]
-    (java.io.DataInputStream. (if (= 1 compression) (java.util.zip.GZIPInputStream. byte_input_stream) (java.util.zip.InflaterInputStream. byte_input_stream)))))
+    (DataInputStream. (if (= 1 compression) (java.util.zip.GZIPInputStream. byte_input_stream) (java.util.zip.InflaterInputStream. byte_input_stream)))))
 
 (defn decode-chunk-data [data]
   (let [
@@ -53,7 +55,7 @@
         ]
     (resolve-tag (decompress-chunk-data (take length compressed_data) compression_type))))
 
-(defn load-region-file [region_file]
+(defn load-region-file [#^File region_file]
   (let [
         region_bytes (java.nio.file.Files/readAllBytes (.toPath region_file))
         chunk_locations (take 4096 region_bytes)
