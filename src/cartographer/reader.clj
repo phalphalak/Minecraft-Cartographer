@@ -18,11 +18,11 @@
 (defn resolve-tag [stream & {:keys [named? type] :or {named? true}}]
   (case (or type (.read stream))
     10 [(if named? (.readUTF stream) nil)
-        (loop [acc []]
-          (let [tag (resolve-tag stream)]
-            (if (= tag "TAG_End")
-              acc
-              (recur (conj acc tag)))))] ;TAG_COMPOUND
+           (loop [acc []]
+             (let [tag (resolve-tag stream)]
+               (if (= tag "TAG_End")
+                 (apply hash-map (reduce concat acc))
+                 (recur (conj acc tag)))))] ;TAG_COMPOUND
     9 [(if named? (.readUTF stream) nil)
        (let [list-type (.readByte stream)]
          (doall (take (.readInt stream) (repeatedly #(resolve-tag stream :named? false :type list-type)))))] ;TAG_List
