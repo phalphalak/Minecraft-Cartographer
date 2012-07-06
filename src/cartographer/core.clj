@@ -1,5 +1,6 @@
 (ns cartographer.core
-  (:require cartographer.reader)
+  (:require [cartographer.reader :as reader]
+            [cartographer.viewer :as viewer])
   (:gen-class :main true))
 
 (set! *warn-on-reflection* true)
@@ -26,5 +27,7 @@
                  (prn chunk))))
   (def first-blocks (((last ((first chunks) :data)) "Level" ) "Blocks" ))
   (def blocks (Blocks. first-blocks))
+
+  
   )
 
